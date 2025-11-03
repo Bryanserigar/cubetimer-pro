@@ -1,0 +1,10 @@
+# Create a folder structure like this:
+cubetimer-pro/
+├── index.html
+├── stats.html
+├── settings.html
+├── about.html
+├── main.js
+└── resources/
+    ├── hero-cube.jpg
+    └── cube-bg.jpg
