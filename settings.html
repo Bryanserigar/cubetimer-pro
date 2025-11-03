@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - CubeTimer Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --accent-cyan: #00d4ff;
+            --success-green: #00ff88;
+            --warning-amber: #ffa500;
+            --error-red: #ff6b6b;
+            --text-primary: #f8f8f8;
+            --text-secondary: #b0b0b0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        .cube-visual {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate 10s infinite linear;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+        
+        .cube-face {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .face-front { background: #ff0000; transform: rotateY(0deg) translateZ(30px); }
+        .face-back { background: #ffa500; transform: rotateY(180deg) translateZ(30px); }
+        .face-right { background: #00ff00; transform: rotateY(90deg) translateZ(30px); }
+        .face-left { background: #0000ff; transform: rotateY(-90deg) translateZ(30px); }
+        .face-top { background: #ffffff; transform: rotateX(90deg) translateZ(30px); }
+        .face-bottom { background: #ffff00; transform: rotateX(-90deg) translateZ(30px); }
+        
+        .settings-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .settings-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #444;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: var(--accent-cyan);
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #444;
+            outline: none;
+        }
+        
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+        }
+        
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .theme-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-preview.active {
+            border-color: var(--accent-cyan);
+            transform: scale(1.1);
+        }
+        
+        .theme-dark { background: linear-gradient(135deg, #1a1a1a, #2d2d2d); }
+        .theme-light { background: linear-gradient(135deg, #f8f8f8, #e0e0e0); }
+        .theme-neon { background: linear-gradient(135deg, #0a0a0a, #1a0033); }
+        .theme-ocean { background: linear-gradient(135deg, #001f3f, #003d7a); }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), #0099cc);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error-red), #cc5555);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-black bg-opacity-80 backdrop-blur-md z-50 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="cube-visual">
+                        <div class="cube-face face-front"></div>
+                        <div class="cube-face face-back"></div>
+                        <div class="cube-face face-right"></div>
+                        <div class="cube-face face-left"></div>
+                        <div class="cube-face face-top"></div>
+                        <div class="cube-face face-bottom"></div>
+                    </div>
+                    <span class="text-xl font-bold text-white">CubeTimer Pro</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">Timer</a>
+                    <a href="stats.html" class="text-gray-300 hover:text-white transition-colors">Statistics</a>
+                    <a href="settings.html" class="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">Settings</a>
+                    <a href="about.html" class="text-gray-300 hover:text-white transition-colors">About</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Settings</h1>
+                <p class="text-xl text-gray-400">Customize your speedcubing experience</p>
+            </div>
+
+            <!-- Timer Settings -->
+            <div class="settings-card rounded-xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Timer Settings</h2>
+                
+                <div class="space-y-6">
+                    <!-- Inspection Time -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Inspection Time</h3>
+                            <p class="text-sm text-gray-400">WCA standard is 15 seconds</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-cyan-400 font-mono" id="inspection-value">15s</span>
+                            <input type="range" min="0" max="60" value="15" class="range-slider w-32" id="inspection-slider">
+                        </div>
+                    </div>
+                    
+                    <!-- Timer Precision -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Timer Precision</h3>
+                            <p class="text-sm text-gray-400">Display format for solve times</p>
+                        </div>
+                        <select class="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white" id="timer-precision">
+                            <option value="milliseconds">Milliseconds (00:00.000)</option>
+                            <option value="centiseconds">Centiseconds (00:00.00)</option>
+                            <option value="seconds">Seconds only (00:00)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Auto Start -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Auto Start</h3>
+                            <p class="text-sm text-gray-400">Start timer immediately after inspection</p>
+                        </div>
+                        <div class="toggle-switch" id="auto-start-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hold to Start -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Hold to Start</h3>
+                            <p class="text-sm text-gray-400">Hold spacebar to ready timer</p>
+                        </div>
+                        <div class="toggle-switch active" id="hold-start-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Settings -->
+            <div class="settings-card rounded-xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Audio Settings</h2>
+                
+                <div class="space-y-6">
+                    <!-- Sound Effects -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Sound Effects</h3>
+                            <p class="text-sm text-gray-400">Audio cues for timer events</p>
+                        </div>
+                        <div class="toggle-switch active" id="sound-effects-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Inspection Warning -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Inspection Warning</h3>
+                            <p class="text-sm text-gray-400">Beep when inspection time is low</p>
+                        </div>
+                        <div class="toggle-switch active" id="inspection-warning-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Volume -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Volume</h3>
+                            <p class="text-sm text-gray-400">Adjust audio volume level</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-cyan-400 font-mono" id="volume-value">70%</span>
+                            <input type="range" min="0" max="100" value="70" class="range-slider w-32" id="volume-slider">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Settings -->
+            <div class="settings-card rounded-xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Appearance</h2>
+                
+                <div class="space-y-6">
+                    <!-- Theme Selection -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-4">Theme</h3>
+                        <div class="flex space-x-4">
+                            <div class="text-center">
+                                <div class="theme-preview theme-dark active" data-theme="dark"></div>
+                                <span class="text-sm text-gray-400">Dark</span>
+                            </div>
+                            <div class="text-center">
+                                <div class="theme-preview theme-light" data-theme="light"></div>
+                                <span class="text-sm text-gray-400">Light</span>
+                            </div>
+                            <div class="text-center">
+                                <div class="theme-preview theme-neon" data-theme="neon"></div>
+                                <span class="text-sm text-gray-400">Neon</span>
+                            </div>
+                            <div class="text-center">
+                                <div class="theme-preview theme-ocean" data-theme="ocean"></div>
+                                <span class="text-sm text-gray-400">Ocean</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Font Size -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Timer Font Size</h3>
+                            <p class="text-sm text-gray-400">Adjust timer display size</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-cyan-400 font-mono" id="font-size-value">6rem</span>
+                            <input type="range" min="3" max="10" value="6" class="range-slider w-32" id="font-size-slider">
+                        </div>
+                    </div>
+                    
+                    <!-- Animations -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Animations</h3>
+                            <p class="text-sm text-gray-400">Enable smooth transitions</p>
+                        </div>
+                        <div class="toggle-switch active" id="animations-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scramble Settings -->
+            <div class="settings-card rounded-xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Scramble Settings</h2>
+                
+                <div class="space-y-6">
+                    <!-- Default Cube Type -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Default Cube Type</h3>
+                            <p class="text-sm text-gray-400">Primary puzzle for scrambles</p>
+                        </div>
+                        <select class="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white" id="cube-type">
+                            <option value="3x3x3">3x3x3</option>
+                            <option value="2x2x2">2x2x2</option>
+                            <option value="4x4x4">4x4x4</option>
+                            <option value="5x5x5">5x5x5</option>
+                            <option value="Pyraminx">Pyraminx</option>
+                            <option value="Megaminx">Megaminx</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Scramble Length -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Scramble Length</h3>
+                            <p class="text-sm text-gray-400">Number of moves in scrambles</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-cyan-400 font-mono" id="scramble-length-value">25</span>
+                            <input type="range" min="15" max="30" value="25" class="range-slider w-32" id="scramble-length-slider">
+                        </div>
+                    </div>
+                    
+                    <!-- Show Scramble Preview -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Scramble Preview</h3>
+                            <p class="text-sm text-gray-400">Visual representation of scramble</p>
+                        </div>
+                        <div class="toggle-switch" id="scramble-preview-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-card rounded-xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Data Management</h2>
+                
+                <div class="space-y-6">
+                    <!-- Auto Save -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Auto Save</h3>
+                            <p class="text-sm text-gray-400">Automatically save solve data</p>
+                        </div>
+                        <div class="toggle-switch active" id="auto-save-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Backup Data -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Backup Data</h3>
+                            <p class="text-sm text-gray-400">Create a backup of your solve history</p>
+                        </div>
+                        <button class="btn-primary px-4 py-2 rounded-lg font-semibold text-white" id="backup-btn">
+                            Create Backup
+                        </button>
+                    </div>
+                    
+                    <!-- Import Data -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Import Data</h3>
+                            <p class="text-sm text-gray-400">Restore from backup file</p>
+                        </div>
+                        <input type="file" accept=".json,.csv" class="hidden" id="import-file">
+                        <button class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold text-white transition-colors" id="import-btn">
+                            Import Data
+                        </button>
+                    </div>
+                    
+                    <!-- Clear Data -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Clear All Data</h3>
+                            <p class="text-sm text-gray-400">Permanently delete all solve history</p>
+                        </div>
+                        <button class="btn-danger px-4 py-2 rounded-lg font-semibold text-white" id="clear-data-btn">
+                            Clear Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Settings -->
+            <div class="text-center">
+                <button class="btn-primary px-8 py-3 rounded-lg font-semibold text-white text-lg" id="save-settings-btn">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black bg-opacity-80 border-t border-gray-800 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2024 CubeTimer Pro. Built for speedcubers, by speedcubers.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Settings Page JavaScript
+        class SettingsPage {
+            constructor() {
+                this.settings = JSON.parse(localStorage.getItem('cubeTimerSettings')) || this.getDefaultSettings();
+                this.init();
+            }
+            
+            getDefaultSettings() {
+                return {
+                    inspectionTime: 15,
+                    timerPrecision: 'milliseconds',
+                    autoStart: false,
+                    holdToStart: true,
+                    soundEffects: true,
+                    inspectionWarning: true,
+                    volume: 70,
+                    theme: 'dark',
+                    fontSize: 6,
+                    animations: true,
+                    cubeType: '3x3x3',
+                    scrambleLength: 25,
+                    scramblePreview: false,
+                    autoSave: true
+                };
+            }
+            
+            init() {
+                this.loadSettings();
+                this.setupEventListeners();
+            }
+            
+            loadSettings() {
+                // Timer Settings
+                document.getElementById('inspection-slider').value = this.settings.inspectionTime;
+                document.getElementById('inspection-value').textContent = this.settings.inspectionTime + 's';
+                document.getElementById('timer-precision').value = this.settings.timerPrecision;
+                this.setToggle('auto-start-toggle', this.settings.autoStart);
+                this.setToggle('hold-start-toggle', this.settings.holdToStart);
+                
+                // Audio Settings
+                this.setToggle('sound-effects-toggle', this.settings.soundEffects);
+                this.setToggle('inspection-warning-toggle', this.settings.inspectionWarning);
+                document.getElementById('volume-slider').value = this.settings.volume;
+                document.getElementById('volume-value').textContent = this.settings.volume + '%';
+                
+                // Appearance
+                document.querySelectorAll('.theme-preview').forEach(preview => {
+                    preview.classList.remove('active');
+                });
+                document.querySelector(`[data-theme="${this.settings.theme}"]`).classList.add('active');
+                document.getElementById('font-size-slider').value = this.settings.fontSize;
+                document.getElementById('font-size-value').textContent = this.settings.fontSize + 'rem';
+                this.setToggle('animations-toggle', this.settings.animations);
+                
+                // Scramble Settings
+                document.getElementById('cube-type').value = this.settings.cubeType;
+                document.getElementById('scramble-length-slider').value = this.settings.scrambleLength;
+                document.getElementById('scramble-length-value').textContent = this.settings.scrambleLength;
+                this.setToggle('scramble-preview-toggle', this.settings.scramblePreview);
+                
+                // Data Management
+                this.setToggle('auto-save-toggle', this.settings.autoSave);
+            }
+            
+            setupEventListeners() {
+                // Timer Settings
+                document.getElementById('inspection-slider').addEventListener('input', (e) => {
+                    this.settings.inspectionTime = parseInt(e.target.value);
+                    document.getElementById('inspection-value').textContent = this.settings.inspectionTime + 's';
+                });
+                
+                document.getElementById('timer-precision').addEventListener('change', (e) => {
+                    this.settings.timerPrecision = e.target.value;
+                });
+                
+                this.setupToggle('auto-start-toggle', (value) => {
+                    this.settings.autoStart = value;
+                });
+                
+                this.setupToggle('hold-start-toggle', (value) => {
+                    this.settings.holdToStart = value;
+                });
+                
+                // Audio Settings
+                this.setupToggle('sound-effects-toggle', (value) => {
+                    this.settings.soundEffects = value;
+                });
+                
+                this.setupToggle('inspection-warning-toggle', (value) => {
+                    this.settings.inspectionWarning = value;
+                });
+                
+                document.getElementById('volume-slider').addEventListener('input', (e) => {
+                    this.settings.volume = parseInt(e.target.value);
+                    document.getElementById('volume-value').textContent = this.settings.volume + '%';
+                });
+                
+                // Appearance
+                document.querySelectorAll('.theme-preview').forEach(preview => {
+                    preview.addEventListener('click', (e) => {
+                        document.querySelectorAll('.theme-preview').forEach(p => p.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.settings.theme = e.target.dataset.theme;
+                    });
+                });
+                
+                document.getElementById('font-size-slider').addEventListener('input', (e) => {
+                    this.settings.fontSize = parseInt(e.target.value);
+                    document.getElementById('font-size-value').textContent = this.settings.fontSize + 'rem';
+                });
+                
+                this.setupToggle('animations-toggle', (value) => {
+                    this.settings.animations = value;
+                });
+                
+                // Scramble Settings
+                document.getElementById('cube-type').addEventListener('change', (e) => {
+                    this.settings.cubeType = e.target.value;
+                });
+                
+                document.getElementById('scramble-length-slider').addEventListener('input', (e) => {
+                    this.settings.scrambleLength = parseInt(e.target.value);
+                    document.getElementById('scramble-length-value').textContent = this.settings.scrambleLength;
+                });
+                
+                this.setupToggle('scramble-preview-toggle', (value) => {
+                    this.settings.scramblePreview = value;
+                });
+                
+                // Data Management
+                this.setupToggle('auto-save-toggle', (value) => {
+                    this.settings.autoSave = value;
+                });
+                
+                document.getElementById('backup-btn').addEventListener('click', () => {
+                    this.createBackup();
+                });
+                
+                document.getElementById('import-btn').addEventListener('click', () => {
+                    document.getElementById('import-file').click();
+                });
+                
+                document.getElementById('import-file').addEventListener('change', (e) => {
+                    this.importData(e.target.files[0]);
+                });
+                
+                document.getElementById('clear-data-btn').addEventListener('click', () => {
+                    this.clearData();
+                });
+                
+                document.getElementById('save-settings-btn').addEventListener('click', () => {
+                    this.saveSettings();
+                });
+            }
+            
+            setupToggle(toggleId, callback) {
+                const toggle = document.getElementById(toggleId);
+                toggle.addEventListener('click', () => {
+                    const isActive = toggle.classList.contains('active');
+                    this.setToggle(toggleId, !isActive);
+                    callback(!isActive);
+                });
+            }
+            
+            setToggle(toggleId, active) {
+                const toggle = document.getElementById(toggleId);
+                if (active) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            }
+            
+            createBackup() {
+                const backupData = {
+                    settings: this.settings,
+                    solves: JSON.parse(localStorage.getItem('cubeTimerSolves')) || [],
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `cube-timer-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                this.showNotification('Backup created successfully!', 'success');
+            }
+            
+            importData(file) {
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        if (data.settings) {
+                            this.settings = { ...this.getDefaultSettings(), ...data.settings };
+                            this.loadSettings();
+                        }
+                        
+                        if (data.solves) {
+                            localStorage.setItem('cubeTimerSolves', JSON.stringify(data.solves));
+                        }
+                        
+                        this.showNotification('Data imported successfully!', 'success');
+                    } catch (error) {
+                        this.showNotification('Error importing data. Please check the file format.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            
+            clearData() {
+                if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                    localStorage.removeItem('cubeTimerSolves');
+                    localStorage.removeItem('cubeTimerSettings');
+                    this.showNotification('All data cleared successfully!', 'success');
+                }
+            }
+            
+            saveSettings() {
+                localStorage.setItem('cubeTimerSettings', JSON.stringify(this.settings));
+                this.showNotification('Settings saved successfully!', 'success');
+            }
+            
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-20 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                    type === 'success' ? 'bg-green-600' : 
+                    type === 'error' ? 'bg-red-600' : 
+                    'bg-blue-600'
+                } text-white`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                anime({
+                    targets: notification,
+                    translateX: [300, 0],
+                    opacity: [0, 1],
+                    duration: 300,
+                    easing: 'easeOutQuart'
+                });
+                
+                setTimeout(() => {
+                    anime({
+                        targets: notification,
+                        translateX: [0, 300],
+                        opacity: [1, 0],
+                        duration: 300,
+                        easing: 'easeInQuart',
+                        complete: () => {
+                            document.body.removeChild(notification);
+                        }
+                    });
+                }, 3000);
+            }
+        }
+        
+        // Initialize settings page
+        document.addEventListener('DOMContentLoaded', () => {
+            new SettingsPage();
+        });
+    </script>
+    <script>
+        // Smooth navigation enhancement
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add smooth page transitions
+            document.querySelectorAll('nav a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (link.href.includes('.html')) {
+                        e.preventDefault();
+                        
+                        // Fade out current page
+                        anime({
+                            targets: 'body',
+                            opacity: [1, 0],
+                            duration: 200,
+                            easing: 'easeOutQuart',
+                            complete: () => {
+                                window.location.href = link.href;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Fade in page on load
+            anime({
+                targets: 'body',
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+        });
+        
+        // Handle page visibility changes for better UX
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                anime({
+                    targets: 'body',
+                    opacity: [0.8, 1],
+                    duration: 200,
+                    easing: 'easeOutQuart'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

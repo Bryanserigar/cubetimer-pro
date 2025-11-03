@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics - CubeTimer Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1a1a1a;
+            --accent-cyan: #00d4ff;
+            --success-green: #00ff88;
+            --warning-amber: #ffa500;
+            --error-red: #ff6b6b;
+            --text-primary: #f8f8f8;
+            --text-secondary: #b0b0b0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        .cube-visual {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate 10s infinite linear;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+        
+        .cube-face {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .face-front { background: #ff0000; transform: rotateY(0deg) translateZ(30px); }
+        .face-back { background: #ffa500; transform: rotateY(180deg) translateZ(30px); }
+        .face-right { background: #00ff00; transform: rotateY(90deg) translateZ(30px); }
+        .face-left { background: #0000ff; transform: rotateY(-90deg) translateZ(30px); }
+        .face-top { background: #ffffff; transform: rotateX(90deg) translateZ(30px); }
+        .face-bottom { background: #ffff00; transform: rotateX(-90deg) translateZ(30px); }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .achievement-badge {
+            background: linear-gradient(135deg, var(--success-green), #00cc6a);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background: var(--accent-cyan);
+            color: var(--primary-bg);
+        }
+        
+        .solve-row {
+            transition: all 0.3s ease;
+        }
+        
+        .solve-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .pb-indicator {
+            background: linear-gradient(135deg, var(--success-green), #00cc6a);
+            animation: glow 1s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+            to { box-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-black bg-opacity-80 backdrop-blur-md z-50 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="cube-visual">
+                        <div class="cube-face face-front"></div>
+                        <div class="cube-face face-back"></div>
+                        <div class="cube-face face-right"></div>
+                        <div class="cube-face face-left"></div>
+                        <div class="cube-face face-top"></div>
+                        <div class="cube-face face-bottom"></div>
+                    </div>
+                    <span class="text-xl font-bold text-white">CubeTimer Pro</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">Timer</a>
+                    <a href="stats.html" class="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">Statistics</a>
+                    <a href="settings.html" class="text-gray-300 hover:text-white transition-colors">Settings</a>
+                    <a href="about.html" class="text-gray-300 hover:text-white transition-colors">About</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Speedcubing Statistics</h1>
+                <p class="text-xl text-gray-400">Track your progress and analyze your performance</p>
+            </div>
+
+            <!-- Overview Statistics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                <div class="stat-card rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-cyan-400 time-display" id="total-solves">0</div>
+                    <div class="text-sm text-gray-400">Total Solves</div>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-green-400 time-display" id="best-single">--:--</div>
+                    <div class="text-sm text-gray-400">Best Single</div>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-yellow-400 time-display" id="best-ao5">--:--</div>
+                    <div class="text-sm text-gray-400">Best ao5</div>
+                </div>
+                <div class="stat-card rounded-xl p-6 text-center">
+                    <div class="text-3xl font-bold text-purple-400 time-display" id="best-ao12">--:--</div>
+                    <div class="text-sm text-gray-400">Best ao12</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <!-- Time History Chart -->
+                <div class="stat-card rounded-xl p-6">
+                    <h2 class="text-2xl font-bold text-white mb-4">Solve Time History</h2>
+                    <div id="time-history-chart" style="height: 300px;"></div>
+                </div>
+                
+                <!-- Time Distribution Chart -->
+                <div class="stat-card rounded-xl p-6">
+                    <h2 class="text-2xl font-bold text-white mb-4">Time Distribution</h2>
+                    <div id="time-distribution-chart" style="height: 300px;"></div>
+                </div>
+            </div>
+
+            <!-- Averages Progress Chart -->
+            <div class="stat-card rounded-xl p-6 mb-12">
+                <h2 class="text-2xl font-bold text-white mb-4">Averages Progress</h2>
+                <div id="averages-chart" style="height: 400px;"></div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="stat-card rounded-xl p-6 mb-12">
+                <h2 class="text-2xl font-bold text-white mb-6">Achievements</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="achievements-grid">
+                    <!-- Achievements will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Solve History -->
+            <div class="stat-card rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Solve History</h2>
+                    <div class="flex space-x-2">
+                        <button class="filter-btn active px-4 py-2 rounded-lg bg-gray-700 text-white text-sm" data-filter="all">All</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white text-sm" data-filter="today">Today</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white text-sm" data-filter="week">This Week</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-700 text-white text-sm" data-filter="month">This Month</button>
+                    </div>
+                </div>
+                
+                <!-- Solve Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-3 px-4 text-gray-400">#</th>
+                                <th class="text-left py-3 px-4 text-gray-400">Time</th>
+                                <th class="text-left py-3 px-4 text-gray-400">Scramble</th>
+                                <th class="text-left py-3 px-4 text-gray-400">Date</th>
+                                <th class="text-left py-3 px-4 text-gray-400">PB</th>
+                            </tr>
+                        </thead>
+                        <tbody id="solve-history-table">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Export Button -->
+                <div class="mt-6 text-center">
+                    <button id="export-data" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-lg font-semibold text-white transition-colors">
+                        Export Data (CSV)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black bg-opacity-80 border-t border-gray-800 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2024 CubeTimer Pro. Built for speedcubers, by speedcubers.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Statistics Page JavaScript
+        class StatisticsPage {
+            constructor() {
+                this.solves = JSON.parse(localStorage.getItem('cubeTimerSolves')) || [];
+                this.currentFilter = 'all';
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.loadStatistics();
+                this.initCharts();
+                this.loadAchievements();
+                this.loadSolveHistory();
+            }
+            
+            setupEventListeners() {
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFilter = e.target.dataset.filter;
+                        this.loadSolveHistory();
+                    });
+                });
+                
+                // Export button
+                document.getElementById('export-data').addEventListener('click', () => {
+                    this.exportData();
+                });
+            }
+            
+            loadStatistics() {
+                if (this.solves.length === 0) {
+                    document.getElementById('total-solves').textContent = '0';
+                    document.getElementById('best-single').textContent = '--:--';
+                    document.getElementById('best-ao5').textContent = '--:--';
+                    document.getElementById('best-ao12').textContent = '--:--';
+                    return;
+                }
+                
+                // Total solves
+                document.getElementById('total-solves').textContent = this.solves.length;
+                
+                // Best single
+                const bestSingle = Math.min(...this.solves.map(s => s.time));
+                document.getElementById('best-single').textContent = this.formatTime(bestSingle);
+                
+                // Best ao5
+                const bestAo5 = this.calculateBestAverage(5);
+                document.getElementById('best-ao5').textContent = bestAo5 ? this.formatTime(bestAo5) : '--:--';
+                
+                // Best ao12
+                const bestAo12 = this.calculateBestAverage(12);
+                document.getElementById('best-ao12').textContent = bestAo12 ? this.formatTime(bestAo12) : '--:--';
+            }
+            
+            calculateBestAverage(count) {
+                if (this.solves.length < count) return null;
+                
+                let bestAvg = Infinity;
+                for (let i = 0; i <= this.solves.length - count; i++) {
+                    const subset = this.solves.slice(i, i + count);
+                    const avg = subset.reduce((sum, s) => sum + s.time, 0) / count;
+                    if (avg < bestAvg) {
+                        bestAvg = avg;
+                    }
+                }
+                return bestAvg;
+            }
+            
+            initCharts() {
+                this.initTimeHistoryChart();
+                this.initTimeDistributionChart();
+                this.initAveragesChart();
+            }
+            
+            initTimeHistoryChart() {
+                const chart = echarts.init(document.getElementById('time-history-chart'));
+                
+                const data = this.solves.map((solve, index) => [index + 1, solve.time / 1000]);
+                
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: {
+                        color: '#f8f8f8'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: (params) => {
+                            const time = params[0].value[1];
+                            return `Solve ${params[0].value[0]}<br/>Time: ${time.toFixed(3)}s`;
+                        }
+                    },
+                    xAxis: {
+                        type: 'value',
+                        name: 'Solve Number',
+                        nameTextStyle: { color: '#b0b0b0' },
+                        axisLine: { lineStyle: { color: '#444' } },
+                        axisLabel: { color: '#b0b0b0' }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Time (seconds)',
+                        nameTextStyle: { color: '#b0b0b0' },
+                        axisLine: { lineStyle: { color: '#444' } },
+                        axisLabel: { color: '#b0b0b0' }
+                    },
+                    series: [{
+                        data: data,
+                        type: 'line',
+                        smooth: true,
+                        lineStyle: { color: '#00d4ff', width: 2 },
+                        itemStyle: { color: '#00d4ff' },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: 'rgba(0, 212, 255, 0.3)' },
+                                    { offset: 1, color: 'rgba(0, 212, 255, 0.05)' }
+                                ]
+                            }
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+            }
+            
+            initTimeDistributionChart() {
+                const chart = echarts.init(document.getElementById('time-distribution-chart'));
+                
+                // Create time bins
+                const bins = [];
+                const binSize = 5; // 5 second bins
+                const maxTime = Math.max(...this.solves.map(s => s.time)) / 1000;
+                
+                for (let i = 0; i <= Math.ceil(maxTime / binSize); i++) {
+                    bins.push({
+                        range: `${i * binSize}-${(i + 1) * binSize}s`,
+                        count: 0
+                    });
+                }
+                
+                // Count solves in each bin
+                this.solves.forEach(solve => {
+                    const time = solve.time / 1000;
+                    const binIndex = Math.floor(time / binSize);
+                    if (bins[binIndex]) {
+                        bins[binIndex].count++;
+                    }
+                });
+                
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: {
+                        color: '#f8f8f8'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: (params) => {
+                            return `${params[0].name}<br/>Solves: ${params[0].value}`;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: bins.map(b => b.range),
+                        axisLine: { lineStyle: { color: '#444' } },
+                        axisLabel: { color: '#b0b0b0', rotate: 45 }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Number of Solves',
+                        nameTextStyle: { color: '#b0b0b0' },
+                        axisLine: { lineStyle: { color: '#444' } },
+                        axisLabel: { color: '#b0b0b0' }
+                    },
+                    series: [{
+                        data: bins.map(b => b.count),
+                        type: 'bar',
+                        itemStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: '#00d4ff' },
+                                    { offset: 1, color: '#0099cc' }
+                                ]
+                            }
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+            }
+            
+            initAveragesChart() {
+                const chart = echarts.init(document.getElementById('averages-chart'));
+                
+                const ao5Data = [];
+                const ao12Data = [];
+                
+                // Calculate rolling averages
+                for (let i = 4; i < this.solves.length; i++) {
+                    const ao5 = this.solves.slice(i - 4, i + 1);
+                    const avg5 = ao5.reduce((sum, s) => sum + s.time, 0) / 5;
+                    ao5Data.push([i + 1, avg5 / 1000]);
+                }
+                
+                for (let i = 11; i < this.solves.length; i++) {
+                    const ao12 = this.solves.slice(i - 11, i + 1);
+                    const avg12 = ao12.reduce((sum, s) => sum + s.time, 0) / 12;
+                    ao12Data.push([i + 1, avg12 / 1000]);
+                }
+                
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: {
+                        color: '#f8f8f8'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: (params) => {
+                            let result = `Solve ${params[0].value[0]}<br/>`;
+                            params.forEach(param => {
+                                result += `${param.seriesName}: ${param.value[1].toFixed(3)}s<br/>`;
+                            });
+                            return result;
+                        }
+                    },
+                    legend: {
+                        data: ['ao5', 'ao12'],
+                        textStyle: { color: '#f8f8f8' }
+                    },
+                    xAxis: {
+                        type: 'value',
+                        name: 'Solve Number',
+                        nameTextStyle: { color: '#b0b0b0' },
+                        axisLine: { lineStyle: { color: '#444' } },
+                        axisLabel: { color: '#b0b0b0' }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Time (seconds)',
+                        nameTextStyle: { color: '#b0b0b0' },
+                        axisLine: { lineStyle: { color: '#444' } },
+                        axisLabel: { color: '#b0b0b0' }
+                    },
+                    series: [
+                        {
+                            name: 'ao5',
+                            data: ao5Data,
+                            type: 'line',
+                            smooth: true,
+                            lineStyle: { color: '#00ff88', width: 2 },
+                            itemStyle: { color: '#00ff88' }
+                        },
+                        {
+                            name: 'ao12',
+                            data: ao12Data,
+                            type: 'line',
+                            smooth: true,
+                            lineStyle: { color: '#ffa500', width: 2 },
+                            itemStyle: { color: '#ffa500' }
+                        }
+                    ]
+                };
+                
+                chart.setOption(option);
+            }
+            
+            loadAchievements() {
+                const achievements = [
+                    { name: 'First Solve', icon: '🎯', unlocked: this.solves.length >= 1 },
+                    { name: 'Speed Demon', icon: '⚡', unlocked: this.solves.some(s => s.time < 30000) },
+                    { name: 'Consistency Master', icon: '📊', unlocked: this.solves.length >= 50 },
+                    { name: 'Sub-20 Club', icon: '🏆', unlocked: this.solves.some(s => s.time < 20000) },
+                    { name: 'Marathon Solver', icon: '🏃', unlocked: this.solves.length >= 100 },
+                    { name: 'Perfectionist', icon: '✨', unlocked: this.calculateBestAverage(5) && this.calculateBestAverage(5) < 25000 },
+                    { name: 'Cube Master', icon: '👑', unlocked: this.solves.length >= 500 },
+                    { name: 'Lightning Fast', icon: '🔥', unlocked: this.solves.some(s => s.time < 15000) }
+                ];
+                
+                const grid = document.getElementById('achievements-grid');
+                grid.innerHTML = achievements.map(achievement => `
+                    <div class="achievement-card p-4 rounded-lg text-center ${achievement.unlocked ? 'achievement-badge' : 'bg-gray-800 bg-opacity-50'}">
+                        <div class="text-3xl mb-2">${achievement.unlocked ? achievement.icon : '🔒'}</div>
+                        <div class="text-sm font-medium ${achievement.unlocked ? 'text-white' : 'text-gray-500'}">${achievement.name}</div>
+                    </div>
+                `).join('');
+            }
+            
+            loadSolveHistory() {
+                let filteredSolves = this.solves;
+                
+                if (this.currentFilter === 'today') {
+                    const today = new Date().toDateString();
+                    filteredSolves = this.solves.filter(s => new Date(s.date).toDateString() === today);
+                } else if (this.currentFilter === 'week') {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    filteredSolves = this.solves.filter(s => new Date(s.date) >= weekAgo);
+                } else if (this.currentFilter === 'month') {
+                    const monthAgo = new Date();
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    filteredSolves = this.solves.filter(s => new Date(s.date) >= monthAgo);
+                }
+                
+                const tbody = document.getElementById('solve-history-table');
+                
+                if (filteredSolves.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">No solves found</td></tr>';
+                    return;
+                }
+                
+                const bestTime = Math.min(...this.solves.map(s => s.time));
+                
+                tbody.innerHTML = filteredSolves.reverse().map((solve, index) => {
+                    const isPB = solve.time === bestTime;
+                    return `
+                        <tr class="solve-row border-b border-gray-800">
+                            <td class="py-3 px-4 text-gray-300">${filteredSolves.length - index}</td>
+                            <td class="py-3 px-4 time-display text-cyan-400">${this.formatTime(solve.time)}</td>
+                            <td class="py-3 px-4 text-gray-400 font-mono text-sm">${solve.scramble.substring(0, 30)}...</td>
+                            <td class="py-3 px-4 text-gray-400">${new Date(solve.date).toLocaleDateString()}</td>
+                            <td class="py-3 px-4">
+                                ${isPB ? '<span class="pb-indicator px-2 py-1 rounded text-xs text-white">PB</span>' : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            
+            exportData() {
+                const csvContent = [
+                    'Solve Number,Time (ms),Scramble,Date',
+                    ...this.solves.map((solve, index) => 
+                        `${index + 1},${solve.time},"${solve.scramble}",${solve.date}`
+                    )
+                ].join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'cube-timer-data.csv';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }
+            
+            formatTime(milliseconds) {
+                const totalSeconds = Math.floor(milliseconds / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const ms = Math.floor((milliseconds % 1000) / 10);
+                
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+            }
+        }
+        
+        // Initialize statistics page
+        document.addEventListener('DOMContentLoaded', () => {
+            new StatisticsPage();
+        });
+    </script>
+    <script>
+        // Smooth navigation enhancement
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add smooth page transitions
+            document.querySelectorAll('nav a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (link.href.includes('.html')) {
+                        e.preventDefault();
+                        
+                        // Fade out current page
+                        anime({
+                            targets: 'body',
+                            opacity: [1, 0],
+                            duration: 200,
+                            easing: 'easeOutQuart',
+                            complete: () => {
+                                window.location.href = link.href;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Fade in page on load
+            anime({
+                targets: 'body',
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutQuart'
+            });
+        });
+        
+        // Handle page visibility changes for better UX
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                anime({
+                    targets: 'body',
+                    opacity: [0.8, 1],
+                    duration: 200,
+                    easing: 'easeOutQuart'
+                });
+            }
+        });
+    </script>
+</body>
+</html>
